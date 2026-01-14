@@ -1,6 +1,5 @@
 # ===========================================
 # carsharing-vehicle-manual-service - Stage CI/CD
-# 스테이지 환경 배포 파이프라인
 # ===========================================
 
 name: cicd-stg
@@ -27,27 +26,20 @@ jobs:
       image-tag: ${{ steps.set-tag.outputs.image-tag }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set image tag from git tag
         id: set-tag
         run: |
-          # Git Tag에서 버전 추출 (v prefix 포함)
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG_NAME" == refs/heads/* ]]; then
-            # 브랜치에서 실행된 경우 commit hash 사용
-            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-            echo "image-tag=stg-${SHORT_SHA}" >> $GITHUB_OUTPUT
-          else
-            echo "image-tag=${TAG_NAME}" >> $GITHUB_OUTPUT
-          fi
+          echo "image-tag=${TAG_NAME}" >> $GITHUB_OUTPUT
 
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/ci - ${{ env.IMG_REPO }}
@@ -58,18 +50,17 @@ jobs:
           img-tag: ${{ steps.set-tag.outputs.image-tag }}
           aws-access-key-id: ${{ secrets.STG_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.STG_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
 
   cd:
     runs-on: ubuntu-20.04
     needs: [ci]
     steps:
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/cd - ${{ env.IMG_REPO }}
@@ -77,12 +68,7 @@ jobs:
         with:
           img-repo: ${{ env.IMG_REPO }}
           img-tag: ${{ needs.ci.outputs.image-tag }}
-          helm-repo: ${{ secrets.STG_HELM_CHART_REPO }}
-          helm-path: ${{ env.IMG_REPO }}
-          helm-branch: main
-          helm-values-file: values-stg.yaml
           argocd-server: ${{ secrets.STG_ARGOCD_SERVER }}
           argocd-app: ${{ env.IMG_REPO }}-stg
           argocd-token: ${{ secrets.STG_ARGOCD_TOKEN }}
-          github-token: ${{ secrets.GH_TOKEN }}
           jira-ticket: '${{ github.event.inputs.jira-ticket }}'

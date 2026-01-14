@@ -1,0 +1,67 @@
+# ===========================================
+# 운영 환경 설정
+# ===========================================
+
+replicaCount: 2  # 고가용성
+
+image:
+  repository: <AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/carsharing-vehicle-manual-service
+  tag: ""  # CI/CD에서 자동 설정 (Git Tag, v prefix)
+
+serviceAccount:
+  create: true
+  name: carsharing-vehicle-manual-service-prod
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/carsharing-vehicle-manual-service-prod-role
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+  hosts:
+    - host: vehicle-manual.socar.me
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: socar-me-tls
+      hosts:
+        - vehicle-manual.socar.me
+
+# 운영 환경 리소스 (넉넉하게)
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+# Pod 분산 배치
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - carsharing-vehicle-manual-service
+          topologyKey: kubernetes.io/hostname
+
+# External Secrets (운영)
+externalSecrets:
+  enabled: true
+  secretStoreName: aws-secrets-manager-prod
+  refreshInterval: 1h
+  target:
+    name: carsharing-vehicle-manual-service-secrets
+  data:
+    - secretKey: OPENAI_API_KEY
+      remoteRef:
+        key: carsharing-vehicle-manual-service/prod
+        property: OPENAI_API_KEY

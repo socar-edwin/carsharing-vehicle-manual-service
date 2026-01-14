@@ -1,6 +1,5 @@
 # ===========================================
 # carsharing-vehicle-manual-service - Development CI/CD
-# 개발 환경 배포 파이프라인
 # ===========================================
 
 name: cicd-dev
@@ -22,7 +21,7 @@ jobs:
       image-tag: ${{ steps.set-tag.outputs.image-tag }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set image tag
         id: set-tag
@@ -31,11 +30,11 @@ jobs:
           echo "image-tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/ci - ${{ env.IMG_REPO }}
@@ -46,18 +45,17 @@ jobs:
           img-tag: ${{ steps.set-tag.outputs.image-tag }}
           aws-access-key-id: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
 
   cd:
     runs-on: ubuntu-20.04
     needs: [ci]
     steps:
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/cd - ${{ env.IMG_REPO }}
@@ -65,11 +63,6 @@ jobs:
         with:
           img-repo: ${{ env.IMG_REPO }}
           img-tag: ${{ needs.ci.outputs.image-tag }}
-          helm-repo: ${{ secrets.DEV_HELM_CHART_REPO }}
-          helm-path: ${{ env.IMG_REPO }}
-          helm-branch: main
-          helm-values-file: values-dev.yaml
           argocd-server: ${{ secrets.DEV_ARGOCD_SERVER }}
           argocd-app: ${{ env.IMG_REPO }}-dev
           argocd-token: ${{ secrets.DEV_ARGOCD_TOKEN }}
-          github-token: ${{ secrets.GH_TOKEN }}

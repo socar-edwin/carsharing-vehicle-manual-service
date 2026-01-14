@@ -1,0 +1,53 @@
+# ===========================================
+# 개발 환경 설정
+# ===========================================
+
+replicaCount: 1
+
+image:
+  repository: <AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/carsharing-vehicle-manual-service
+  tag: ""  # CI/CD에서 자동 설정 (dev-{commit hash})
+
+serviceAccount:
+  create: true
+  name: carsharing-vehicle-manual-service-dev
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/carsharing-vehicle-manual-service-dev-role
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+  hosts:
+    - host: vehicle-manual-dev.socar.me
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: socar-me-tls
+      hosts:
+        - vehicle-manual-dev.socar.me
+
+# 개발 환경 리소스 (작게)
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# External Secrets (개발)
+externalSecrets:
+  enabled: true
+  secretStoreName: aws-secrets-manager-dev
+  refreshInterval: 1h
+  target:
+    name: carsharing-vehicle-manual-service-secrets
+  data:
+    - secretKey: OPENAI_API_KEY
+      remoteRef:
+        key: carsharing-vehicle-manual-service/dev
+        property: OPENAI_API_KEY

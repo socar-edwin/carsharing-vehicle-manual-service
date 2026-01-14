@@ -1,6 +1,5 @@
 # ===========================================
 # carsharing-vehicle-manual-service - Production CI/CD
-# 운영 환경 배포 파이프라인
 # ===========================================
 
 name: cicd-prod
@@ -27,29 +26,20 @@ jobs:
       image-tag: ${{ steps.set-tag.outputs.image-tag }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Validate git tag
+      - name: Set image tag from git tag
         id: set-tag
         run: |
-          # Git Tag에서 버전 추출 (v prefix 필수)
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG_NAME" == refs/heads/* ]]; then
-            # 브랜치에서 실행된 경우 - 운영은 반드시 태그로 배포
-            echo "::error::운영 환경은 반드시 Git Tag로 배포해야 합니다. (v prefix 필수, 예: v1.0.0)"
-            exit 1
-          fi
-          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo "::warning::Tag 이름이 SemVer 형식이 아닙니다: ${TAG_NAME}"
-          fi
           echo "image-tag=${TAG_NAME}" >> $GITHUB_OUTPUT
 
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/ci - ${{ env.IMG_REPO }}
@@ -60,18 +50,17 @@ jobs:
           img-tag: ${{ steps.set-tag.outputs.image-tag }}
           aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
 
   cd:
     runs-on: ubuntu-20.04
     needs: [ci]
     steps:
       - name: Checkout custom action repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: ${{ env.ACTION_REPO }}
           ref: ${{ env.ACTION_REF }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.SOCAR_TECH_GITHUB_TOKEN }}
           path: ./.github/actions
 
       - name: Run actions/cd - ${{ env.IMG_REPO }}
@@ -79,12 +68,7 @@ jobs:
         with:
           img-repo: ${{ env.IMG_REPO }}
           img-tag: ${{ needs.ci.outputs.image-tag }}
-          helm-repo: ${{ secrets.PROD_HELM_CHART_REPO }}
-          helm-path: ${{ env.IMG_REPO }}
-          helm-branch: main
-          helm-values-file: values-prod.yaml
           argocd-server: ${{ secrets.PROD_ARGOCD_SERVER }}
           argocd-app: ${{ env.IMG_REPO }}-prod
           argocd-token: ${{ secrets.PROD_ARGOCD_TOKEN }}
-          github-token: ${{ secrets.GH_TOKEN }}
           jira-ticket: '${{ github.event.inputs.jira-ticket }}'

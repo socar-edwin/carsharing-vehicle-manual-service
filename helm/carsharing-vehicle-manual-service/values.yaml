@@ -1,0 +1,94 @@
+# ===========================================
+# carsharing-vehicle-manual-service
+# 공통 설정 (환경별 설정은 values-{env}.yaml 참조)
+# ===========================================
+
+# 레플리카 수
+replicaCount: 1
+
+# 이미지 설정
+image:
+  repository: ""  # 환경별 ECR URL로 오버라이드
+  tag: ""         # CI/CD에서 자동 설정
+  pullPolicy: IfNotPresent
+
+# 서비스 계정
+serviceAccount:
+  create: true
+  name: ""  # 환경별로 설정
+  annotations: {}
+
+# Pod 설정
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+# 서비스 설정
+service:
+  type: ClusterIP
+  port: 8501
+  targetPort: 8501
+
+# Ingress 설정
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts: []  # 환경별로 설정
+  tls: []
+
+# 리소스 설정
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# 헬스체크
+livenessProbe:
+  httpGet:
+    path: /_stcore/health
+    port: 8501
+  initialDelaySeconds: 30
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /_stcore/health
+    port: 8501
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# 노드 선택
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# 환경 변수 (시크릿 제외)
+env:
+  STREAMLIT_SERVER_PORT: "8501"
+  STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+  STREAMLIT_SERVER_HEADLESS: "true"
+  STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+
+# External Secrets 설정
+externalSecrets:
+  enabled: true
+  secretStoreName: ""  # 환경별로 설정
+  refreshInterval: 1h
+  target:
+    name: ""  # 환경별로 설정
+  data: []   # 환경별로 설정

@@ -1,0 +1,61 @@
+# ===========================================
+# app_vehicle.py (차량 매뉴얼 챗봇) 필수 패키지
+# ===========================================
+
+# Core RAG Framework
+llama-index>=0.14.0,<0.15.0
+llama-index-vector-stores-chroma>=0.5.5,<0.6.0
+llama-index-embeddings-openai>=0.5.0,<0.6.0
+
+# Vector Store
+chromadb>=1.3.0,<2.0.0
+
+# Streamlit UI
+streamlit>=1.51.0,<1.52.0
+
+# OpenAI
+openai>=2.6.0,<2.7.0
+
+# Data Processing
+pandas>=2.3.0,<2.4.0
+
+# Utilities
+python-dotenv>=1.2.0,<1.3.0
+
+# ===========================================
+# app.py / search_api.py (Help Center) 전용
+# 현재 app_vehicle.py에서 미사용
+# ===========================================
+
+# llama-index-llms-anthropic>=0.10.5,<0.11.0  # Anthropic LLM
+
+# API & Web Framework (search_api.py)
+# fastapi>=0.128.0,<0.130.0
+# uvicorn[standard]>=0.38.0,<0.40.0
+# pydantic>=2.12.0,<2.13.0
+
+# BM25 & Korean NLP (Help Center Hybrid Search)
+# rank-bm25>=0.2.2,<0.3.0
+# jieba>=0.42.1,<0.43.0
+
+# Zendesk API & HTML Parsing (get_zendesk_data.py)
+# requests>=2.32.0,<2.33.0
+# beautifulsoup4>=4.14.0,<4.15.0
+
+# Anthropic for LLM generation
+# anthropic>=0.75.0,<0.76.0
+
+# Cohere for Reranking (Help Center)
+# cohere>=5.20.0,<5.21.0
+
+# HTTP Client
+# httpx>=0.28.0,<0.29.0
+# aiohttp>=3.13.0,<3.14.0
+
+# ===========================================
+# Development (선택)
+# ===========================================
+
+# numpy>=2.3.0,<2.4.0  # pandas 의존성으로 자동 설치됨
+# jupyter>=1.1.0,<1.2.0
+# ipykernel>=7.1.0,<7.2.0

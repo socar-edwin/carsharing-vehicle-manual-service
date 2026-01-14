@@ -1,0 +1,90 @@
+# ===========================================
+# carsharing-vehicle-manual-service - Production CI/CD
+# 운영 환경 배포 파이프라인
+# ===========================================
+
+name: cicd-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      jira-ticket:
+        description: |
+          "배포 시 CR 티켓을 입력해주세요. 만약 CR 티켓이 여러 개라면 '_' 로 연결하여 작성부탁드립니다."
+          "EX) 티켓이 하나일 경우 : SD-XX , 티켓이 두개 이상일 경우 : SD-XX_SD-YY_SD-ZZ"
+        required: true
+        default: "SD-XX"
+
+env:
+  ACTION_REPO: "socar-inc/socar-actions"
+  ACTION_REF: "v2.0"
+  IMG_REPO: "carsharing-vehicle-manual-service"
+
+jobs:
+  ci:
+    runs-on: ubuntu-20.04
+    outputs:
+      image-tag: ${{ steps.set-tag.outputs.image-tag }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Validate git tag
+        id: set-tag
+        run: |
+          # Git Tag에서 버전 추출 (v prefix 필수)
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          if [[ "$TAG_NAME" == refs/heads/* ]]; then
+            # 브랜치에서 실행된 경우 - 운영은 반드시 태그로 배포
+            echo "::error::운영 환경은 반드시 Git Tag로 배포해야 합니다. (v prefix 필수, 예: v1.0.0)"
+            exit 1
+          fi
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "::warning::Tag 이름이 SemVer 형식이 아닙니다: ${TAG_NAME}"
+          fi
+          echo "image-tag=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Checkout custom action repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ACTION_REPO }}
+          ref: ${{ env.ACTION_REF }}
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./.github/actions
+
+      - name: Run actions/ci - ${{ env.IMG_REPO }}
+        uses: ./.github/actions/ci
+        with:
+          img-registry: ${{ secrets.PROD_ECR_REGISTRY }}
+          img-repo: ${{ env.IMG_REPO }}
+          img-tag: ${{ steps.set-tag.outputs.image-tag }}
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+  cd:
+    runs-on: ubuntu-20.04
+    needs: [ci]
+    steps:
+      - name: Checkout custom action repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ACTION_REPO }}
+          ref: ${{ env.ACTION_REF }}
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./.github/actions
+
+      - name: Run actions/cd - ${{ env.IMG_REPO }}
+        uses: ./.github/actions/cd
+        with:
+          img-repo: ${{ env.IMG_REPO }}
+          img-tag: ${{ needs.ci.outputs.image-tag }}
+          helm-repo: ${{ secrets.PROD_HELM_CHART_REPO }}
+          helm-path: ${{ env.IMG_REPO }}
+          helm-branch: main
+          helm-values-file: values-prod.yaml
+          argocd-server: ${{ secrets.PROD_ARGOCD_SERVER }}
+          argocd-app: ${{ env.IMG_REPO }}-prod
+          argocd-token: ${{ secrets.PROD_ARGOCD_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
+          jira-ticket: '${{ github.event.inputs.jira-ticket }}'

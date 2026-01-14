@@ -57,6 +57,9 @@ env/
 *.pptx
 *.ppt
 
+# Helm Chart (별도 레포로 관리)
+helm/
+
 # Data (선택적 - 필요시 주석 해제)
 # data/
 # vectorstore/

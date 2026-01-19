@@ -11,8 +11,6 @@ import pandas as pd
 import logging
 from pathlib import Path
 
-from config import AUTH_ENABLED, ALLOWED_EMAIL_DOMAINS
-
 # 로깅 설정
 logging.basicConfig(
     level=logging.INFO,
@@ -192,10 +190,32 @@ def get_vehicle_data():
         return {}
 
 
+def _get_auth_config():
+    """Get auth config from secrets or environment."""
+    import os
+
+    # Try st.secrets first (Streamlit Cloud)
+    try:
+        auth_enabled = st.secrets.get("AUTH_ENABLED", "true")
+        allowed_domains = st.secrets.get("ALLOWED_EMAIL_DOMAINS", "socar.kr")
+    except Exception:
+        # Fallback to environment variables (local)
+        auth_enabled = os.getenv("AUTH_ENABLED", "true")
+        allowed_domains = os.getenv("ALLOWED_EMAIL_DOMAINS", "socar.kr")
+
+    # Convert to proper types
+    auth_enabled = str(auth_enabled).lower() == "true"
+    allowed_domains = str(allowed_domains).split(",")
+
+    return auth_enabled, allowed_domains
+
+
 def main():
     # ========================================
     # 인증 체크 (AUTH_ENABLED=true일 때만)
     # ========================================
+    AUTH_ENABLED, ALLOWED_EMAIL_DOMAINS = _get_auth_config()
+
     if AUTH_ENABLED:
         from src.auth import require_auth, render_user_info
 
@@ -286,6 +306,7 @@ def main():
 
             # 사용자 정보 & 로그아웃 (인증 활성화 시)
             if AUTH_ENABLED:
+                from src.auth import render_user_info
                 render_user_info()
 
     # ========================================

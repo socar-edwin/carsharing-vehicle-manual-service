@@ -3,11 +3,15 @@
 
 URL 파라미터로 car_class_id를 받아 해당 차종 매뉴얼 기반 질문 답변
 예: ?car_class_id=695 → GV70 매뉴얼로 답변
+
+인증: Google OAuth (@socar.kr 도메인 제한)
 """
 import streamlit as st
 import pandas as pd
 import logging
 from pathlib import Path
+
+from config import AUTH_ENABLED, ALLOWED_EMAIL_DOMAINS
 
 # 로깅 설정
 logging.basicConfig(
@@ -190,6 +194,15 @@ def get_vehicle_data():
 
 def main():
     # ========================================
+    # 인증 체크 (AUTH_ENABLED=true일 때만)
+    # ========================================
+    if AUTH_ENABLED:
+        from src.auth import require_auth, render_user_info
+
+        if not require_auth(ALLOWED_EMAIL_DOMAINS):
+            st.stop()
+
+    # ========================================
     # URL 파라미터에서 car_class_id 확인
     # ========================================
     query_params = st.query_params
@@ -270,6 +283,10 @@ def main():
                     📂 {selected_type}
                 </div>
                 """, unsafe_allow_html=True)
+
+            # 사용자 정보 & 로그아웃 (인증 활성화 시)
+            if AUTH_ENABLED:
+                render_user_info()
 
     # ========================================
     # 헤더 (차종명 반영) + 우측 상단 시그니처

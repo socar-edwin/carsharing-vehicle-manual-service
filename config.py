@@ -58,6 +58,10 @@ API_VERSION = "0.1.0"
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
+# Authentication settings
+AUTH_ENABLED = os.getenv("AUTH_ENABLED", "true").lower() == "true"
+ALLOWED_EMAIL_DOMAINS = os.getenv("ALLOWED_EMAIL_DOMAINS", "socar.kr").split(",")  # comma-separated
+
 # Feature flags
 # ENABLE_RERANKING: Auto-enabled if COHERE_API_KEY is set, or explicitly via env var
 ENABLE_RERANKING = os.getenv("ENABLE_RERANKING", "true" if COHERE_API_KEY else "false").lower() == "true"

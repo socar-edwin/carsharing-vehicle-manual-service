@@ -8,11 +8,30 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
+def get_secret(key: str, default: str = None) -> str:
+    """Get secret from environment variable or Streamlit secrets."""
+    # 1. Try environment variable first (local .env)
+    value = os.getenv(key)
+    if value:
+        return value
+
+    # 2. Try Streamlit secrets (Streamlit Cloud)
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+
+    return default
+
+
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent
 
 # API Keys
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = get_secret("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")  # For Phase 2
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")  # For Phase 2 reranking
 
@@ -59,8 +78,8 @@ API_VERSION = "0.1.0"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Authentication settings
-AUTH_ENABLED = os.getenv("AUTH_ENABLED", "true").lower() == "true"
-ALLOWED_EMAIL_DOMAINS = os.getenv("ALLOWED_EMAIL_DOMAINS", "socar.kr").split(",")  # comma-separated
+AUTH_ENABLED = get_secret("AUTH_ENABLED", "true").lower() == "true"
+ALLOWED_EMAIL_DOMAINS = get_secret("ALLOWED_EMAIL_DOMAINS", "socar.kr").split(",")  # comma-separated
 
 # Feature flags
 # ENABLE_RERANKING: Auto-enabled if COHERE_API_KEY is set, or explicitly via env var

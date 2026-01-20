@@ -1,0 +1,6 @@
+[client]
+# 툴바 모드 설정
+# "minimal" - 외부 설정 옵션만 표시 (GitHub 아이콘, 햄버거 메뉴 최소화)
+# "viewer" - 개발자 옵션 숨김
+# "auto" - 기본값
+toolbarMode = "minimal"

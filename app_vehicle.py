@@ -49,6 +49,33 @@ st.markdown("""
     }
 
     /* ========================================
+       우상단 overlay (fork/GitHub 아이콘 덮기)
+       ======================================== */
+    .cover-top-right {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 120px !important;
+        height: 60px !important;
+        background: white !important;
+        z-index: 999999 !important;
+        pointer-events: none !important;
+    }
+
+    /* 다크모드 대응 */
+    @media (prefers-color-scheme: dark) {
+        .cover-top-right {
+            background: #0e1117 !important;
+        }
+    }
+
+    /* Streamlit 다크모드 대응 */
+    [data-testid="stAppViewContainer"][data-theme="dark"] ~ .cover-top-right,
+    .stApp[data-theme="dark"] .cover-top-right {
+        background: #0e1117 !important;
+    }
+
+    /* ========================================
        앱 스타일
        ======================================== */
 
@@ -124,6 +151,9 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# 우상단 overlay (fork/GitHub 아이콘 덮기)
+st.markdown('<div class="cover-top-right"></div>', unsafe_allow_html=True)
 
 
 @st.cache_resource

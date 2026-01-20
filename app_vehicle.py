@@ -343,7 +343,7 @@ def main():
     ''', unsafe_allow_html=True)
 
     st.markdown('<div class="main-header">차량 매뉴얼 챗봇</div>', unsafe_allow_html=True)
-    if is_from_url and display_car_name:
+    if display_car_name:
         st.markdown(f"**{display_car_name}**의 조작 방법에 대해 질문해 주세요!")
     else:
         st.markdown("쏘카 차량의 **조작 방법**에 대해 질문해 주세요!")

@@ -32,6 +32,56 @@ st.set_page_config(
 # CSS 스타일
 st.markdown("""
 <style>
+    /* ========================================
+       Streamlit 기본 UI 숨김 (웹/모바일, 라이트/다크 모드 대응)
+       ======================================== */
+
+    /* 햄버거 메뉴 (점 세 개) */
+    #MainMenu {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* Deploy 버튼 (Streamlit 1.38+) */
+    .stAppDeployButton {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* 전체 툴바 영역 */
+    [data-testid="stToolbar"] {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* 헤더 영역 (상단 여백 포함) */
+    header[data-testid="stHeader"] {
+        visibility: hidden !important;
+        height: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 푸터 (Made with Streamlit) */
+    footer {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* GitHub 아이콘 */
+    #GithubIcon {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* 상단 데코레이션 라인 제거 */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    /* ========================================
+       앱 스타일
+       ======================================== */
+
     .main-header {
         font-size: 2rem;
         font-weight: bold;

@@ -34,46 +34,18 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* ========================================
-       Streamlit 기본 UI 숨김 (웹/모바일, 라이트/다크 모드 대응)
-       사이드바 토글 버튼만 유지
+       Streamlit 기본 UI 최소화
+       (사이드바 토글 버튼은 유지)
        ======================================== */
 
-    /* 햄버거 메뉴 (우상단 점 세 개) */
-    #MainMenu,
-    [data-testid="stMainMenu"],
-    .stMainMenu {
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-
-    /* Deploy 버튼 */
-    .stAppDeployButton,
-    [data-testid="stAppDeployButton"] {
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-
-    /* 푸터 (Made with Streamlit) */
+    /* 푸터만 숨김 (Made with Streamlit) */
     footer {
         visibility: hidden !important;
-    }
-
-    /* 상단 데코레이션 라인 */
-    [data-testid="stDecoration"] {
-        display: none !important;
     }
 
     /* 헤더 배경 투명 */
     header[data-testid="stHeader"] {
         background: transparent !important;
-    }
-
-    /* 우상단 툴바 영역만 숨김 (사이드바 버튼 제외) */
-    [data-testid="stToolbar"] {
-        right: -9999px !important;
-        position: fixed !important;
     }
 
     /* ========================================

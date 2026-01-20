@@ -26,7 +26,8 @@ SOCAR_SIGNATURE = "img/Socar_Signature_WhiteBG_RGB.png"
 st.set_page_config(
     page_title="차량 매뉴얼 챗봇",
     page_icon=SOCAR_SYMBOL,
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"  # 모바일에서도 사이드바 열린 상태로 시작
 )
 
 # CSS 스타일

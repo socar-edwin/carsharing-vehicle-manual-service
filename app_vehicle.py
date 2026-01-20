@@ -54,11 +54,17 @@ st.markdown("""
         display: none !important;
     }
 
-    /* 헤더 영역 (상단 여백 포함) */
+    /* 헤더 영역 - 배경만 투명하게 (사이드바 버튼 유지) */
     header[data-testid="stHeader"] {
-        visibility: hidden !important;
-        height: 0 !important;
-        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    /* 사이드바 토글 버튼은 보이게 유지 */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"],
+    button[kind="header"] {
+        visibility: visible !important;
+        display: flex !important;
     }
 
     /* 푸터 (Made with Streamlit) */

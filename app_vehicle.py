@@ -34,47 +34,34 @@ st.markdown("""
 <style>
     /* ========================================
        Streamlit 기본 UI 숨김 (웹/모바일, 라이트/다크 모드 대응)
+       사이드바 토글 버튼은 유지
        ======================================== */
 
-    /* 햄버거 메뉴 (점 세 개) */
-    #MainMenu {
+    /* 햄버거 메뉴 (점 세 개) - 우상단 */
+    #MainMenu,
+    button[kind="headerNoPadding"],
+    [data-testid="stMainMenu"] {
         visibility: hidden !important;
         display: none !important;
     }
 
     /* Deploy 버튼 (Streamlit 1.38+) */
-    .stAppDeployButton {
+    .stAppDeployButton,
+    [data-testid="stAppDeployButton"] {
         visibility: hidden !important;
         display: none !important;
-    }
-
-    /* 전체 툴바 영역 */
-    [data-testid="stToolbar"] {
-        visibility: hidden !important;
-        display: none !important;
-    }
-
-    /* 헤더 영역 - 배경만 투명하게 (사이드바 버튼 유지) */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
-
-    /* 사이드바 토글 버튼은 보이게 유지 */
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"],
-    button[kind="header"] {
-        visibility: visible !important;
-        display: flex !important;
     }
 
     /* 푸터 (Made with Streamlit) */
-    footer {
+    footer,
+    [data-testid="stFooter"] {
         visibility: hidden !important;
         display: none !important;
     }
 
     /* GitHub 아이콘 */
-    #GithubIcon {
+    #GithubIcon,
+    [data-testid="stGitHub"] {
         visibility: hidden !important;
         display: none !important;
     }
@@ -82,6 +69,11 @@ st.markdown("""
     /* 상단 데코레이션 라인 제거 */
     [data-testid="stDecoration"] {
         display: none !important;
+    }
+
+    /* 헤더 배경 투명 (사이드바 버튼 영역 유지) */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
     }
 
     /* ========================================

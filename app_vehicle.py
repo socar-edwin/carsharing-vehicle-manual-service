@@ -37,33 +37,29 @@ st.markdown("""
        사이드바 토글 버튼만 유지
        ======================================== */
 
-    /* 헤더 내 모든 버튼 숨기기 */
-    header[data-testid="stHeader"] button {
+    /* 햄버거 메뉴 (우상단 점 세 개) */
+    #MainMenu,
+    [data-testid="stMainMenu"],
+    .stMainMenu {
         visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
-    /* 사이드바 토글 버튼만 보이기 */
-    header[data-testid="stHeader"] [data-testid="baseButton-header"],
-    header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"] button {
-        visibility: visible !important;
-    }
-
-    /* 햄버거 메뉴 숨김 */
-    #MainMenu {
+    /* Deploy 버튼 */
+    .stAppDeployButton,
+    [data-testid="stAppDeployButton"] {
         visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
-    /* Deploy 버튼 숨김 */
-    .stAppDeployButton {
-        visibility: hidden !important;
-    }
-
-    /* 푸터 숨김 */
+    /* 푸터 (Made with Streamlit) */
     footer {
         visibility: hidden !important;
     }
 
-    /* 상단 데코레이션 라인 제거 */
+    /* 상단 데코레이션 라인 */
     [data-testid="stDecoration"] {
         display: none !important;
     }
@@ -71,6 +67,12 @@ st.markdown("""
     /* 헤더 배경 투명 */
     header[data-testid="stHeader"] {
         background: transparent !important;
+    }
+
+    /* 우상단 툴바 영역만 숨김 (사이드바 버튼 제외) */
+    [data-testid="stToolbar"] {
+        right: -9999px !important;
+        position: fixed !important;
     }
 
     /* ========================================

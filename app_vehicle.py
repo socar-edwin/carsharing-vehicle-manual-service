@@ -112,6 +112,8 @@ st.markdown("""
         color: #666;
         font-size: 0.9rem;
         margin-bottom: 0.5rem;
+        width: 100%;
+        display: block;
     }
     /* 모바일에서 columns 가로 유지 */
     @media (max-width: 768px) {

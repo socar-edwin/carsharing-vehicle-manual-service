@@ -32,8 +32,10 @@ SYSTEM_PROMPT = """당신은 쏘카(SOCAR) 카셰어링 서비스의 전문 상�
 - "쏘카 차량 공통 안내"는 차량별 정보가 없을 때만 참조합니다.
 - 예: "주유구 위치"를 물으면 "오른쪽/왼쪽" 등 구체적 위치를 먼저 답하고, 주유카드 안내는 부가 정보로만 제공합니다.
 
-## 제약사항
-- **제공된 컨텍스트에 없는 정보는 답변하지 않습니다.**
+## 제약사항 (매우 중요)
+- **제공된 컨텍스트에 없는 정보는 절대 답변하지 않습니다.**
+- **질문의 핵심 키워드(예: 타이어, 스노우, 썬루프 등)가 컨텍스트에 없으면 "해당 정보가 매뉴얼에 포함되어 있지 않습니다"라고 답변합니다.**
+- **질문과 관련 없는 다른 정보(하이패스, 주유 등)를 대신 답변하지 마세요.**
 - 다른 차종의 정보를 혼동하지 않습니다.
 - 일반적인 상식이 아닌 쏘카 서비스 관련 정보는 반드시 문서를 참조합니다.
 """
@@ -424,6 +426,62 @@ class VehicleChatbot:
                 return True
         return False
 
+    def _extract_query_keywords(self, query: str) -> List[str]:
+        """
+        질문에서 핵심 키워드(명사) 추출
+        Relevance 체크에 사용
+
+        Args:
+            query: 사용자 질문
+
+        Returns:
+            핵심 키워드 리스트
+        """
+        keywords = []
+
+        # 1. 기존 HIGHLIGHT_KEYWORDS에서 매칭
+        query_lower = query.lower()
+        for kw in HIGHLIGHT_KEYWORDS:
+            if kw in query_lower:
+                keywords.append(kw)
+
+        # 2. 추가 키워드 패턴 (차량 관련 명사)
+        extra_keywords = [
+            '타이어', '스노우', '윈터', '사계절', '체인',
+            '썬루프', '파노라마', '루프', '선루프',
+            '카시트', 'isofix', '아이소픽스', '카시트고정',
+            '어라운드뷰', '후방카메라', '360도',
+            '견인', '견인고리', '토잉',
+            '연식', '년식', '출고',
+            '옵션', '사양', '트림',
+            'V2L', 'V2H', '외부충전',
+            '무시동', '히터', '난방',
+            '폴딩', '접이식', '리클라이너',
+            '인승', '좌석', '시트',
+        ]
+        for kw in extra_keywords:
+            if kw.lower() in query_lower and kw not in keywords:
+                keywords.append(kw)
+
+        # 3. 정규식으로 명사 패턴 추출 (한글 2글자 이상)
+        # "~은", "~는", "~이", "~가" 앞의 단어
+        patterns = [
+            r'([가-힣]{2,})\s*(?:은|는|이|가)\s',
+            r'([가-힣]{2,})\s*(?:를|을)\s',
+            r'([가-힣]{2,})\s*(?:에|로|으로)\s',
+        ]
+        for pattern in patterns:
+            matches = re.findall(pattern, query)
+            for match in matches:
+                if len(match) >= 2 and match not in keywords:
+                    # 일반적인 단어 제외
+                    exclude_words = ['차량', '차', '쏘카', '제가', '저', '이', '그', '저것', '뭐', '어떻게', '어디']
+                    if match not in exclude_words:
+                        keywords.append(match)
+
+        logger.info(f"Extracted keywords from query '{query}': {keywords}")
+        return keywords
+
     def _select_best_source(self, query: str, candidates: List[Dict], analysis: Dict = None) -> Optional[Dict]:
         """LLM을 사용하여 가장 적절한 출처 선택"""
         if not candidates:
@@ -580,11 +638,29 @@ class VehicleChatbot:
             except Exception as e:
                 logger.warning(f"Help Center search failed: {e}")
 
-        # 3. 컨텍스트 구성 (전체 문서 사용, score 필터링 제거)
+        # 3. 컨텍스트 구성 + Relevance 필터링
         vehicle_context = format_context_for_llm(vehicle_chunks) if vehicle_chunks else ""
 
-        # 4. 검색 결과 없음 처리 (차종 매뉴얼도 없고 도움말도 없는 경우)
-        if not vehicle_chunks and not help_center_context:
+        # 3-1. Relevance 체크: 질문의 핵심 키워드가 컨텍스트에 있는지 확인
+        context_is_relevant = True
+        if vehicle_context:
+            # 질문에서 핵심 키워드 추출 (명사 추출)
+            query_keywords = self._extract_query_keywords(query)
+            logger.info(f"Query keywords: {query_keywords}")
+
+            if query_keywords:
+                # 컨텍스트에 키워드가 하나라도 있는지 확인
+                context_lower = vehicle_context.lower()
+                keyword_found = any(kw.lower() in context_lower for kw in query_keywords)
+
+                if not keyword_found:
+                    logger.warning(f"No relevant keywords found in context for query: {query}")
+                    context_is_relevant = False
+                    # 컨텍스트가 질문과 관련 없으면 비움
+                    vehicle_context = ""
+
+        # 4. 검색 결과 없음 처리 (차종 매뉴얼도 없고 도움말도 없는 경우, 또는 관련성 없음)
+        if (not vehicle_chunks and not help_center_context) or (not context_is_relevant and not help_center_context):
             return {
                 'answer': f"죄송합니다. '{query}'에 대한 관련 정보를 찾을 수 없습니다. 다른 질문을 해주시거나, 쏘카 고객센터(1661-3315)로 문의해 주세요.",
                 'sources': [],

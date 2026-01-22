@@ -65,7 +65,10 @@ helm/
 
 # Data (선택적 - 필요시 주석 해제)
 # data/
-# vectorstore/
+vectorstore/
+
+# Excel 임시 파일
+~$*.xlsx
 
 # Logs
 *.log
